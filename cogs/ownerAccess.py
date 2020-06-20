@@ -1,19 +1,23 @@
 import discord
 from discord.ext import commands
 import os
+import aiosqlite
 
 class OwnerAccess(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-        self.exception = self.client.get_cog('CustomExceptions').throwException
+        self.exception = self.client.get_cog('ExceptionHandler').throwException
 
     @commands.command()
     @commands.is_owner()
-    async def ls(self, ctx):
-
-        dirName = os.getcwd().split('/')[-1]
-        content = ''.join([_ + '\n' for _ in os.listdir()])
+    async def ls(self, ctx, path=None):
+        if path is None or not os.path.isdir(path):
+            dirName = os.getcwd().split('/')[-1]
+            content = ''.join([_ + '\n' for _ in os.listdir()])
+        else:
+            dirName = os.getcwd().split('/')[-1] + path
+            content = ''.join([_ + '\n' for _ in os.listdir(os.getcwd() + '/' + path)])
 
         await ctx.send(f'**/{dirName}/**\n```py' + content + '\n```')
 
@@ -37,7 +41,7 @@ class OwnerAccess(commands.Cog):
             await self.exception(ctx=ctx, exceptionMessage='access denied. this file holds sensitive data.')
             return
 
-        elif fileName not in os.listdir():
+        elif fileName not in os.listdir() and not fileName.split('/')[1] in os.listdir(fileName.split('/')[0]):
             await self.exception(ctx=ctx, exceptionMessage='file not found.')
             return
 
